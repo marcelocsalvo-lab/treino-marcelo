@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="apple-touch-icon" href="Pro.png">
+    <title>Treino Marcelo – Mobile</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f1117; color: #e0e0e0; min-height: 100vh; }
+        .header { background: linear-gradient(135deg, #1a1f2e, #252d3d); padding: 18px 16px 0; text-align: center; border-bottom: 1px solid #2a3040; position: sticky; top: 0; z-index: 100; }
+        .header h1 { font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 2px; }
+        .header p  { font-size: 0.70rem; color: #8892a4; margin-bottom: 12px; }
+        .tabs { display: flex; }
+        .tab-btn { flex: 1; padding: 11px 4px; background: transparent; border: none; border-bottom: 3px solid transparent; color: #8892a4; font-size: 0.76rem; font-weight: 600; cursor: pointer; transition: all 0.2s; line-height: 1.3; }
+        .tab-btn.active { color: #4e9af1; border-bottom-color: #4e9af1; }
+        .tab-btn .day-label { font-size: 1rem; display: block; margin-bottom: 2px; }
+        .tab-btn .day-sub   { font-size: 0.60rem; color: #8892a4; display: block; }
+        .tab-btn.active .day-sub { color: #4e9af1; }
+        .content { padding: 12px 12px 50px; max-width: 600px; margin: 0 auto; }
+        .day-panel { display: none; }
+        .day-panel.active { display: block; }
+        .section-card { background: #1a1f2e; border-radius: 14px; margin-bottom: 12px; overflow: hidden; border: 1px solid #252d3d; }
+        .section-header { display: flex; align-items: center; padding: 12px 14px; cursor: pointer; user-select: none; background: #1e2436; -webkit-tap-highlight-color: transparent; }
+        .section-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; margin-right: 10px; flex-shrink: 0; }
+        .section-title { font-size: 0.90rem; font-weight: 700; color: #fff; flex: 1; }
+        .section-count { font-size: 0.68rem; color: #8892a4; margin-right: 7px; }
+        .chevron { font-size: 0.65rem; color: #8892a4; transition: transform 0.25s; }
+        .section-card.open .chevron { transform: rotate(180deg); }
+        .section-body { display: none; }
+        .section-card.open .section-body { display: block; }
+        .exercise-row { padding: 12px 14px; border-top: 1px solid #252d3d; }
+        .exercise-name { font-size: 0.86rem; font-weight: 600; color: #e8eaf0; margin-bottom: 8px; line-height: 1.3; }
+        .exercise-stats { display: flex; gap: 5px; margin-bottom: 8px; flex-wrap: wrap; }
+        .stat-pill { background: #252d3d; border-radius: 6px; padding: 3px 9px; font-size: 0.70rem; color: #a0aab8; }
+        .stat-pill strong { color: #e0e0e0; }
+        .tag-biset     { background: #1e2d4a; color: #60c0fa; border: 1px solid #2a4070; }
+        .tag-restpause { background: #2a1e40; color: #c084fc; border: 1px solid #4a2a70; }
+        .tag-slow      { background: #1e3020; color: #6ee7b7; border: 1px solid #2a5030; }
+        .weight-row { display: flex; align-items: center; gap: 8px; }
+        .weight-label { font-size: 0.73rem; color: #8892a4; white-space: nowrap; }
+        .weight-input-wrapper { position: relative; width: 108px; }
+        .weight-input { width: 100%; padding: 7px 28px 7px 10px; background: #252d3d; border: 1.5px solid #2e384a; border-radius: 9px; color: #fff; font-size: 0.86rem; outline: none; transition: border-color 0.2s; -webkit-appearance: none; }
+        .weight-input:focus { border-color: #4e9af1; }
+        .weight-unit { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 0.66rem; color: #8892a4; pointer-events: none; }
+        .obs-text { margin-top: 6px; font-size: 0.71rem; color: #6b7a91; line-height: 1.45; font-style: italic; }
+        .carga-ref { margin-top: 5px; font-size: 0.69rem; color: #4e7a91; }
+        .save-toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(80px); background: #1a7a42; color: #fff; padding: 8px 18px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; transition: transform 0.28s ease; z-index: 999; pointer-events: none; }
+        .save-toast.show { transform: translateX(-50%) translateY(0); }
+        .icon-aquecimento { background: #2a2010; color: #fbbf24; }
+        .icon-costas      { background: #1a3040; color: #60a5fa; }
+        .icon-biceps      { background: #2d1f4a; color: #a78bfa; }
+        .icon-posterior   { background: #1a2d20; color: #34d399; }
+        .icon-core        { background: #2d1a1a; color: #f87171; }
+        .icon-peito       { background: #2d1030; color: #e879f9; }
+        .icon-triceps     { background: #2d2010; color: #fbbf24; }
+        .icon-quadriceps  { background: #1a2d20; color: #34d399; }
+        .footer-note { text-align: center; padding: 12px; font-size: 0.66rem; color: #3a4558; }
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+        input[type=number] { -moz-appearance: textfield; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Treino Marcelo</h1>
+    <p>Toque no peso para editar &bull; salvo automaticamente</p>
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('1')">
+            <span class="day-label">Dia 1</span>
+            <span class="day-sub">Costas · Biceps · Posterior · Core</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab('2')">
+            <span class="day-label">Dia 2</span>
+            <span class="day-sub">Peito · Triceps · Quadriceps · Abdomen</span>
+        </button>
+    </div>
+</div>
+
+<div class="content">
+
+<!-- ===== DIA 1 ===== -->
+<div id="panel-1" class="day-panel active">
+
+    <div class="section-card open">
+        <div class="section-header" onclick="toggleSection(this)">
+            <div class="section-icon icon-aquecimento">&#128293;</div>
+            <div class="section-title">Aquecimento</div>
+            <div class="section-count">1 exercicio</div>
+            <div class="chevron">&#9660;</div>
+        </div>
+        <div class="section-body">
+            <div class="exercise-row">
+                <div class="exercise-name">Mobilidade escapular</div>
+                <div class="exercise-stats">
+                    <div class="stat-pill"><strong>1</strong> serie</div>
+                    <div class="stat-pill">Peso corporal</div>
+                </div>
+                <div class="obs-text">Ativacao e mobilizacao dos ombros antes do treino de costas</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-card open">
+        <div class="section-header" onclick="toggleSection(this)">
+            <div class="section-icon icon-costas">&#128309;</div>
+            <div class="section-title">Costas</div>
+            <div class="section-count">4 exercicios</div>
+            <div class="chevron">&#9660;</div>
+        </div>
+        <div class="section-body">
+            <div class="exercise-row">
+                <div class="exercise-name">Puxada fechada</div>
+                <div class="exercise-stats">
+                    <div class="stat-pill"><strong>3</strong> series</div>
+                    <div class="stat-pill"><strong>8</strong> reps</div>
+                    <div class="stat-pill tag-biset">BISET ↓ Pulldown</div>
+                </div>
+                <div class="weight-row">
+                    <span class="weight-label">Peso:</span>
+                    <div class="weight-input-wrapper">
+                        <input type="number" class="weight-input" id="d1_costas_1" value="50" oninput="saveWeight('d1_costas_1',this.value)">
+                        <span class="weight-unit">kg</span>
+                    </div>
+                </div>
+                <div class="obs-text">Pegada supinada fechada; cotovelos puxam para baixo; sem pausa antes do Pulldown</div>
+            </div>
+            <div class="exercise-row">
+                <div class="exercise-name">Pulldown</div>
+                <div class="exercise-stats">
+                    <div class="stat-pill"><strong>3</strong> series</div>
+                    <div class="stat-pill"><strong>10</strong> reps</div>
+                    <div class="stat-pill tag-biset">BISET ↑ Puxada</div>
+                </div>
+                <div class="weight-row">
+                    <span class="weight-label">Peso:</span>
+                    <div class="weight-input-wrapper">
+                        <input type="number" class="weight-input" id="d1_costas_2" value="25" oninput="saveWeight('d1_costas_2',this.value)">
+                        <span class="weight-unit">kg</span>
+                    </div>
+                </div>
+                <div class="obs-text">Executar em sequencia com a Puxada fechada; puxar ate a clavicula</div>
+            </div>
+            <div class="exercise-row">
+                <div class="exercise-name">Remada curvada barra</div>
+                <div class="exercise-stats">
+                    <div class="stat-pill"><strong>3</strong> series</div>
+                    <div class="stat-pill"><strong>10</strong> reps</div>
+                </div>
+                <div class="weight-row">
+                    <span class="weight-label">Peso:</span>
+                    <div class="weight-input-wrapper">
+                        <input type="number" class="weight-input" id="d1_costas_3" value="15" oninput="saveWeight('d1_costas_3',this.value)">
+                        <span class="weight-unit">kg</span>
+                    </div>
+                </div>
+                <div class="obs-text">Coluna neutra; puxar em direcao ao umbigo; descida controlada</div>
+            </div>
+            <div class="exercise-row">
+                <div class="exercise-name">Voador inverso</div>
+                <div class="exercise-stats">
+                    <div class="stat-pill"><strong>3</strong> series</div>
+                    <div class="stat-pill"><strong>10</strong> reps</div>
+                    <div class="stat-pill tag-restpause">REST PAUSE</div>
+                </div>
+                <div class="weight-row">
+                    <span class="weight-label">Placas:</span>
+                    <div class="weight-input-wrapper">
+                        <input type="number" class="weight-input" id="d1_costas_4" value="5" oninput="saveWeight('d1_costas_4',this.value)">
+                        <span class="weight-unit">PL</span>
+                    </div>
+                </div>
+                <div class="obs-text">Execute ate a falha; descanse 15-20s; retome ate completar as reps</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-card open">
+        <div class="section-header" onclick="toggleSection(this)">
+            <div class="section-icon icon-biceps">&#128170;</div>
+            <div class="section-title">Biceps</div>
+            <div class="section-count">1 exercicio</div>
+            <div class="chevron">&#9660;</div>
+        </div>
+        <div class="section-body">
+            <div class="exercise-row">
+                <div class="exercise-name">Rosca direta haltere</div>
+                <div class="exercise-stats">
+                    <div class="stat-pill"><strong>3</strong> series</div>
+                    <div class="stat-pill"><strong>8</strong> reps</div>
+                </div>
+                <div class="weight-row">
+                    <span class="weight-label">Peso:</span>
+                    <div class="weight-input-wrapper">
+                        <input type="number" class="weight-input" id="d1_biceps_1" value="10" oninput="saveWeight('d1_biceps_1',this.value)">
+                        <span class="weight-unit">kg</span>
+                    </div>
+                </div>
+                <div class="obs-text">Cotovelos fixos ao corpo; supinacao completa no topo; sem balanco de tronco</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-card open">
+        <div class="section-header" onclick="toggleSection(this)">
+            <div class="section-icon icon-posterior">&#128994;</div>
+            <div class="section-title">Posterior &amp; Panturrilha</div>
+            <div class="section-count">2 exercicios</div>
+            <div class="chevron">&#9660;</div>
+        </div>
+        <div class="section-body">
+            <div class="exercise-row">
+                <div class="exercise-name">Mesa flexora</div>
+                <div class="exercise-stats">
+                    <div class="stat-pill"><strong>3</strong> series</div>
+                    <div class="stat-pill"><strong>10</strong> reps</div>
+                    <div class="stat-pill">PICO 2''</div>
+                </div>
+                <div class="weight-row">
+                    <span class="weight-label">Peso:</span>
+                    <div class="weight-input-wrapper">
+                        <input type="number" class="weight-input" id="d1_post_1" value="20" oninput="saveWeight('d1_post_1',this.value)">
+                        <span class="weight-unit">kg</span>
+                    </div>
+                </div>
+                <div class="obs-text">Pausa de 2 segundos na contracao maxima; descida controlada (excentrico lento)</div>
+            </div>
+            <div class="exercise-row">
+                <div class="exercise-name">Gemeos no leg press</div>
+                <div class="exercise-stats">
+                    <div class="stat-pill"><strong>3</strong> series</div>
+                    <div class="stat-pill">Falha</div>
+                    <div class="stat-pill tag-restpause">REST PAUSE</div>
+                </div>
+                <div class="weight-row">
+                    <span class="weight-label">Peso:</span>
+                    <div class="weight-input-wrapper">
+                        <input type="number" class="weight-input" id="d1_post_2" value="120" oninput="saveWeight('d1_post_2',this.value)">
+                        <span class="weight-unit">kg</span>
+                    </div>
+                </div>
+                <div class="obs-text">Apenas a ponta dos pes na plataforma; amplitude total; pausa 15s ao falhar</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-card open">
+        <div class="section-header" onclick="toggleSection(this)">
+            <div class="section-icon icon-core">&#128308;</div>
+            <div class="section-title">Core &amp; Condicionamento</div>
+            <div class="section-count">2 exercicios</div>
+            <div class="chevron">&#9660;</div>
+        </div>
+        <div class="section-body">
+            <div class="exercise-row">
+                <div class="exercise-name">Superman</div>
+                <div class="exercise-stats">
+                    <div class="stat-pill"><strong>3</strong> series</div>
+                    <div class="stat-pill"><strong>25 seg</strong></div>
+                    <div class="stat-pill">Peso corporal</div>
+                </div>
+                <div class="obs-text">Extensao lombar; manter posicao isometrica; quadril no chao</div>
+            </div>
+            <div class="exercise-row">
+                <div class="exercise-name">Corda naval · Swing · Arremesso solo</div>
+                <div class="exercise-stats">
+                    <div class="stat-pill"><strong>21 – 15 – 9</strong> reps</div>
+                    <div class="stat-pill">Peso corporal</div>
+                </div>
+                <div class="obs-text">Circuito: 21 reps de cada → 15 de cada → 9 de cada; ritmo forte</div>
+            </div>
+        </div>
+    </div>
+
+</div><!-- /panel-1 -->
+
+
+<!-- ===== DIA 2 ===== -->
+<div id="panel-2" class="day-panel">
+
+    <div class="section-card open">
+        <div class="section-header" onclick="toggleSection(this)">
+            <div class="section-icon icon-aquecimento">&#128293;</div>
+            <div class="section-title">Aquecimento</div>
+            <div class="section-count">1 exercicio</div>
+            <div class="chevron">&#9660;</div>
+        </div>
+        <div class="section-body">
+            <div class="exercise-row">
+                <div class="exercise-name">Mobilidade quadril e ombro</div>
+                <div class="exercise-stats">
+                    <div class="stat-pill"><strong>1</strong> serie</div>
+                    <div class="stat-pill">Peso corporal</div>
+                </div>
+                <div class="obs-text">Abertura de quadril + rotacao de ombro antes do supino e leg press</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-card open">
+        <div class="section-header" onclick="toggleSection(this)">
+            <div class="section-icon icon-peito">&#128995;</div>
+            <div class="section-title">Peito</div>
+            <div class="section-count">3 exercicios</div>
+            <div class="chevron">&#9660;</div>
+        </div>
+        <div class="section-body">
+            <div class="exercise-row">
+                <div class="exercise-name">Supino inclinado haltere</div>
+                <div class="exercise-stats">
+                    <div class="stat-pill"><strong>3</strong> series</div>
+                    <div class="stat-pill"><strong>12-10-8</strong> reps</div>
+                </div>
+                <div class="weight-row">
+                    <span class="weight-label">Peso:</span>
+                    <div class="weight-input-wrapper">
+                        <input type="number" class="weight-input" id="d2_peito_1" value="10" oninput="saveWeight('d2_peito_1',this.value)">
+                        <span class="weight-unit">kg</span>
+                    </div>
+                </div>
+                <div class="carga-ref">Series: 10 → 12 → 14 kg (progressivo)</div>
+                <div class="obs-text">Angulo ~30-45 graus; pes no chao; foco no peitoral superior</div>
+            </div>
+            <div class="exercise-row">
+                <div class="exercise-name">Voador (peck deck)</div>
+                <div class="exercise-stats">
+                    <div class="stat-pill"><strong>3</strong> series</div>
+                    <div class="stat-pill"><strong>10</strong> reps</div>
+                </div>
+                <div class="weight-row">
+                    <span class="weight-label">Placas:</span>
+                    <div class="weight-input-wrapper">
+                        <input type="number" class="weight-input" id="d2_peito_2" value="8" oninput="saveWeight('d2_peito_2',this.value)">
+                        <span class="weight-unit">PL</span>
+                    </div>
+                </div>
+                <div class="obs-text">Arco leve nos cotovelos; cruzar as maos na frente; pausa 1s na contracao</div>
+            </div>
+            <div class="exercise-row">
+                <div class="exercise-name">Cruxifixo reto</div>
+                <div class="exercise-stats">
+                    <div class="stat-pill"><strong>3</strong> series</div>
+                    <div class="stat-pill"><strong>8</strong> reps</div>
+                    <div class="stat-pill tag-slow">SLOW</div>
+                    <div class="stat-pill tag-biset">BISET ↓ Flexao joelho</div>
+                </div>
+                <div class="weight-row">
+                    <span class="weight-label">Peso:</span>
+                    <div class="weight-input-wrapper">
+                        <input type="number" class="weight-input" id="d2_peito_3" value="10" oninput="saveWeight('d2_peito_3',this.value)">
+                        <span class="weight-unit">kg</span>
+                    </div>
+                </div>
+                <div class="obs-text">SLOW: descer em 4 seg; BISET com Flexao de joelho em sequencia</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-card open">
+        <div class="section-header" onclick="toggleSection(this)">
+            <div class="section-icon icon-triceps">&#128993;</div>
+            <div class="section-title">Triceps &amp; Ombro</div>
+            <div class="section-count">3 exercicios</div>
+            <div class="chevron">&#9660;</div>
+        </div>
+        <div class="section-body">
+            <div class="exercise-row">
+                <div class="exercise-name">Flexao de joelho</div>
+                <div class="exercise-stats">
+                    <div class="stat-pill"><strong>3</strong> series</div>
+                    <div class="stat-pill">Falha</div>
+                    <div class="stat-pill tag-biset">BISET ↑ Cruxifixo</div>
+                </div>
+                <div class="obs-text">BISET com Cruxifixo reto; peso corporal; joelhos e pes alinhados</div>
+            </div>
+            <div class="exercise-row">
+                <div class="exercise-name">Triceps testa barra W</div>
+                <div class="exercise-stats">
+                    <div class="stat-pill"><strong>3</strong> series</div>
+                    <div class="stat-pill"><strong>10</strong> reps</div>
+                </div>
+                <div class="weight-row">
+                    <span class="weight-label">Peso:</span>
+                    <div class="weight-input-wrapper">
+                        <input type="number" class="weight-input" id="d2_tri_1" value="5" oninput="saveWeight('d2_tri_1',this.value)">
+                        <span class="weight-unit">kg</span>
+                    </div>
+                </div>
+                <div class="obs-text">Barra W (EZ); cotovelos apontam para cima; abaixar ate ~5cm da testa</div>
+            </div>
+            <div class="exercise-row">
+                <div class="exercise-name">Desenvolvimento – slow</div>
+                <div class="exercise-stats">
+                    <div class="stat-pill"><strong>3</strong> series</div>
+                    <div class="stat-pill"><strong>12-10-8</strong> reps</div>
+                    <div class="stat-pill tag-slow">SLOW</div>
+                </div>
+                <div class="weight-row">
+                    <span class="weight-label">Peso:</span>
+                    <div class="weight-input-wrapper">
+                        <input type="number" class="weight-input" id="d2_ombro_1" value="8" oninput="saveWeight('d2_ombro_1',this.value)">
+                        <span class="weight-unit">kg</span>
+                    </div>
+                </div>
+                <div class="carga-ref">Series: 8 → 9 → 10 kg (progressivo)</div>
+                <div class="obs-text">SLOW: subir 2s / descer 4s; coluna neutra; cotovelos a 90 graus na base</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-card open">
+        <div class="section-header" onclick="toggleSection(this)">
+            <div class="section-icon icon-quadriceps">&#128994;</div>
+            <div class="section-title">Quadriceps</div>
+            <div class="section-count">2 exercicios</div>
+            <div class="chevron">&#9660;</div>
+        </div>
+        <div class="section-body">
+            <div class="exercise-row">
+                <div class="exercise-name">Leg press</div>
+                <div class="exercise-stats">
+                    <div class="stat-pill"><strong>3</strong> series</div>
+                    <div class="stat-pill"><strong>12</strong> reps</div>
+                </div>
+                <div class="weight-row">
+                    <span class="weight-label">Peso:</span>
+                    <div class="weight-input-wrapper">
+                        <input type="number" class="weight-input" id="d2_quad_1" value="160" oninput="saveWeight('d2_quad_1',this.value)">
+                        <span class="weight-unit">kg</span>
+                    </div>
+                </div>
+                <div class="obs-text">Pes paralelos na largura dos quadris; descer ate 90 graus; joelhos alinhados</div>
+            </div>
+            <div class="exercise-row">
+                <div class="exercise-name">Extensora</div>
+                <div class="exercise-stats">
+                    <div class="stat-pill"><strong>3</strong> series</div>
+                    <div class="stat-pill"><strong>10</strong> reps</div>
+                    <div class="stat-pill tag-restpause">REST PAUSE</div>
+                </div>
+                <div class="weight-row">
+                    <span class="weight-label">Peso:</span>
+                    <div class="weight-input-wrapper">
+                        <input type="number" class="weight-input" id="d2_quad_2" value="50" oninput="saveWeight('d2_quad_2',this.value)">
+                        <span class="weight-unit">kg</span>
+                    </div>
+                </div>
+                <div class="obs-text">REST PAUSE: pausa 15s ao falhar; enfase na contracao no topo</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-card open">
+        <div class="section-header" onclick="toggleSection(this)">
+            <div class="section-icon icon-core">&#128308;</div>
+            <div class="section-title">Abdominal</div>
+            <div class="section-count">1 exercicio</div>
+            <div class="chevron">&#9660;</div>
+        </div>
+        <div class="section-body">
+            <div class="exercise-row">
+                <div class="exercise-name">Prancha isometrica</div>
+                <div class="exercise-stats">
+                    <div class="stat-pill"><strong>3</strong> series</div>
+                    <div class="stat-pill"><strong>40 seg</strong></div>
+                    <div class="stat-pill">Peso corporal</div>
+                </div>
+                <div class="obs-text">Quadril alinhado; nao deixar cair nem elevar; respiracao controlada</div>
+            </div>
+        </div>
+    </div>
+
+</div><!-- /panel-2 -->
+
+<div class="footer-note">Pesos salvos automaticamente neste dispositivo &bull; 202609210835</div>
+</div><!-- /content -->
+<div class="save-toast" id="toast">&#10003; Peso salvo</div>
+
+<script>
+    // Pesos de referencia carregados do TreinoMarcelo.xlsx
+    var defaults = {
+        'd1_costas_1': '50',   // puxada fechada
+        'd1_costas_2': '25',   // pulldown
+        'd1_costas_3': '15',   // remada curvada barra
+        'd1_costas_4': '5',    // voador inverso (5 placas)
+        'd1_biceps_1': '10',   // rosca direta haltere
+        'd1_post_1':   '20',   // mesa flexora
+        'd1_post_2':   '120',  // gemeos leg press
+        'd2_peito_1':  '10',   // supino inclinado (serie 1 de 10/12/14)
+        'd2_peito_2':  '8',    // voador peck deck (8 placas)
+        'd2_peito_3':  '10',   // cruxifixo reto
+        'd2_tri_1':    '5',    // triceps testa barra W
+        'd2_ombro_1':  '8',    // desenvolvimento slow (serie 1 de 8/9/10)
+        'd2_quad_1':   '160',  // leg press
+        'd2_quad_2':   '50'    // extensora
+    };
+
+    function switchTab(day) {
+        document.querySelectorAll('.day-panel').forEach(function(p) { p.classList.remove('active'); });
+        document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+        document.getElementById('panel-' + day).classList.add('active');
+        document.querySelectorAll('.tab-btn')[day === '1' ? 0 : 1].classList.add('active');
+    }
+
+    function toggleSection(header) {
+        header.parentElement.classList.toggle('open');
+    }
+
+    var toastTimeout;
+    function saveWeight(id, value) {
+        var key = 'marcelo_' + id;
+        if (value !== '' && value !== null) {
+            localStorage.setItem(key, value);
+        } else {
+            localStorage.removeItem(key);
+        }
+        var toast = document.getElementById('toast');
+        toast.classList.add('show');
+        clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(function() { toast.classList.remove('show'); }, 1800);
+    }
+
+    window.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.weight-input').forEach(function(input) {
+            var saved = localStorage.getItem('marcelo_' + input.id);
+            if (saved) {
+                // usuario ja salvou um valor: usar o salvo
+                input.value = saved;
+            } else if (defaults[input.id] !== undefined) {
+                // primeira abertura: registrar o peso do Excel no localStorage
+                input.value = defaults[input.id];
+                localStorage.setItem('marcelo_' + input.id, defaults[input.id]);
+            }
+        });
+    });
+</script>
+
+</body>
+</html>
